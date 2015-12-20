@@ -20,14 +20,22 @@ td {
 }
 
 .initialSol {
-	color: black;
+	color: #000000;
 }
 
 .filledSol {
-	color: red;
+	color: #ff0000;
 }
 
 .gridTitle {
 	margin: 10px;
 	text-align: center;
+}
+
+.crossPos {
+	background-color: #ffffff;
+}
+
+.circPos {
+	background-color: #ffdc99;
 }

@@ -264,6 +264,7 @@ angular.module('sudokuCtrl').directive('sudokuCell', function() {
 
 function SudokuCellController($scope) {
 	$scope.disabled = $scope.$parent.$parent.solution;
+	$scope.cross = $scope.$parent.cross;
 	$scope.blackText = true;
 	$scope.$parent.$parent.$parent.$watch('solution', function() {
 		var orig = $scope.$parent.$parent.orig;
@@ -312,6 +313,7 @@ function SudokuBoxController($scope) {
 	$scope.midCol = parseInt($scope.midCol);
 	$scope.rowRange = [$scope.midRow - 1, $scope.midRow + 1];
 	$scope.colRange = [$scope.midCol - 1, $scope.midCol + 1];
+	$scope.cross = $scope.midRow == $scope.midCol || $scope.midRow + $scope.midCol == 8;
 }
 
 angular.module('sudokuCtrl').directive('sudokuGrid', function() {
