@@ -1,0 +1,33 @@
+.box {
+	margin: 0 !important;
+	overflow: visible !important;
+}
+
+table {
+	border-collapse: collapse;
+}
+td {
+	border: 4px solid black;
+	border-collapse: collapse;
+}
+
+.sudokuGrid {
+	margin: 10px;
+}
+
+.submitButton {
+	margin: 10px;
+}
+
+.initialSol {
+	color: black;
+}
+
+.filledSol {
+	color: red;
+}
+
+.gridTitle {
+	margin: 10px;
+	text-align: center;
+}
