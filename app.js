@@ -1,9 +1,8 @@
 angular.module('app', ['sudokuCtrl', 'ngMaterial', 'ngAnimate', 'ngAria']);
 
-angular.module('sudokuCtrl', ['ngMaterial', 'ngAnimate', 'ngAria']);
-
-angular.module('sudokuCtrl').controller('SudokuController', ['$scope', SudokuController]);
+angular.module('app').controller('SudokuController', ['$scope', SudokuController]);
 function SudokuController($scope) {
+	$scope.numIters = 0;
 	$scope.solved = false;
 	/*$scope.sudokuGrid = [[0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
@@ -14,7 +13,7 @@ function SudokuController($scope) {
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0]]; */
-	/*$scope.sudokuGrid = [[0,0,0,0,0,2,3,0,9], easy
+	$scope.sudokuGrid = [[0,0,0,0,0,2,3,0,9], //easy
 						 [3,0,0,0,9,0,0,7,8],
 						 [0,0,9,8,0,3,1,5,0],
 						 [0,9,0,2,0,8,4,0,0],
@@ -22,8 +21,8 @@ function SudokuController($scope) {
 						 [0,0,0,7,1,0,0,8,0],
 						 [0,0,0,3,0,5,0,9,7],
 						 [9,5,0,1,0,0,0,2,0],
-						 [4,7,0,0,0,9,0,0,1]];  */
-	$scope.sudokuGrid = [[2,0,0,0,0,4,0,0,0],
+						 [4,7,0,0,0,9,0,0,1]]; 
+	/*$scope.sudokuGrid = [[2,0,0,0,0,4,0,0,0],
 						 [0,0,8,2,0,0,0,1,0],
 						 [0,4,6,7,0,0,0,0,0],
 						 [0,3,0,0,0,5,0,0,1],
@@ -31,7 +30,7 @@ function SudokuController($scope) {
 						 [9,0,0,3,0,0,0,7,0],
 						 [0,0,0,0,0,1,7,6,0],
 						 [0,1,0,0,0,6,4,0,0],
-						 [0,0,0,5,0,0,0,0,9]]; 
+						 [0,0,0,5,0,0,0,0,9]]; */
 	$scope.solution =   [[0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
@@ -41,9 +40,11 @@ function SudokuController($scope) {
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0]]; 
+	$scope.solCopy = angular.copy($scope.solution);
 
 	$scope.solve = function() {
 		var partial = angular.copy($scope.sudokuGrid);
+		$scope.solCopy = angular.copy($scope.solution);
 		$scope.solution = angular.copy($scope.sudokuGrid);
 		$scope.filledIn = $scope.getMutableLocs(partial);
 		/*for (var i = 0; i < 9; i++) {
@@ -56,12 +57,13 @@ function SudokuController($scope) {
 		backtrack(partial, 0, -1, mutable);
 		if (!$scope.solved) {
 			alert("This sudoku puzzle has no solutions.");
-			reset($scope.solution);
+			$scope.solution = angular.copy($scope.solCopy);
 		}
 		$scope.solved = false;
+		console.log($scope.numIters);
 	}
 
-	function reset(matrix) {
+	function resetSolution(matrix) {
 		for (var i = 0; i < matrix.length; i++) {
 			for (var j = 0; j < matrix[i].length; j++) {
 				matrix[i][j] = 0;
@@ -78,6 +80,7 @@ function SudokuController($scope) {
 	}
 
 	function uniqueSweep(partial, mutable) {
+		$scope.numIters++;
 		var finishedSweep = true;
 		for (var i = 0; i < 9; i++) {
 			for (var j = 0; j < 9; j++) {
@@ -123,6 +126,7 @@ function SudokuController($scope) {
 
 	function backtrack(partial, r, c, mutableLocs) {
 		//console.log("1");
+		$scope.numIters++;
 		var nextLoc = nextPoint(r, c, mutableLocs);
 		if (nextLoc.length == 0) {
 			processSolution(angular.copy(partial));
@@ -212,8 +216,11 @@ function SudokuController($scope) {
 	function processSolution(solution) {
 		//console.log("4");
 		//console.log(solution);
-		$scope.solution = angular.copy(solution);
-		$scope.solved = true;
+		var copy = angular.copy(solution);
+		if ($scope.isSolution(copy)) {
+			$scope.solution = copy;
+			$scope.solved = true;
+		}
 	}
 
 	$scope.isSolution = function(solution) {
