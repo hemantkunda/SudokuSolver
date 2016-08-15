@@ -1,0 +1,9 @@
+<div class="sudokuGrid">
+	<table>
+		<tr ng-repeat="(rowIndex, row) in grid">
+			<td ng-repeat="(col, num) in grid[rowIndex] track by $index">
+				<sudoku-cell row="grid[rowIndex]" col="col" initial-num="colors[rowIndex][col]"></sudoku-cell>
+			</td>
+		</tr>
+	</table>
+</div>
