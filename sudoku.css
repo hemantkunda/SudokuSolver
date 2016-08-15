@@ -7,12 +7,43 @@ table {
 	border-collapse: collapse;
 }
 td {
-	border: 4px solid black;
 	border-collapse: collapse;
 }
 
 .sudokuGrid {
 	margin: 10px;
+}
+
+.sudokuCell {
+	height: 40px;
+	width: 40px;
+}
+
+
+
+td {
+	padding: 0;
+	margin: 0;
+}
+
+tr:last-child {
+	border-bottom: 4px solid black;
+}
+
+tr:nth-child(3n + 1) {
+	border-top: 4px solid black;
+}
+
+td:first-child {
+	border-left: 4px solid black;
+}
+
+td:nth-child(3n + 3){
+	border-right: 4px solid black;
+}
+
+.shaded {
+
 }
 
 .submitButton {
@@ -38,6 +69,12 @@ td {
 
 .circPos {
 	background-color: #ffdc99;
+}
+
+.instructions {
+	text-align: center;
+	width: 40%;
+	padding-left: 35px;
 }
 
 /* ng-cloak styles */

@@ -1,9 +1,10 @@
-angular.module('app', ['sudokuCtrl', 'ngMaterial', 'ngAnimate', 'ngAria']);
+angular.module('sudokuCtrl', ['ngMaterial', 'ngAnimate', 'ngAria']);
 
-angular.module('app').controller('SudokuController', ['$scope', SudokuController]);
+angular.module('sudokuCtrl').controller('SudokuController', ['$scope', SudokuController]);
 function SudokuController($scope) {
 	$scope.numIters = 0;
 	$scope.solved = false;
+	$scope.numSolutionsFound = 0;
 	/*$scope.sudokuGrid = [[0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
@@ -31,7 +32,7 @@ function SudokuController($scope) {
 						 [0,0,0,0,0,1,7,6,0],
 						 [0,1,0,0,0,6,4,0,0],
 						 [0,0,0,5,0,0,0,0,9]]; */
-	$scope.solution =   [[0,0,0,0,0,0,0,0,0],
+	/*$scope.solution =   [[0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
@@ -39,10 +40,32 @@ function SudokuController($scope) {
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
 						 [0,0,0,0,0,0,0,0,0],
-						 [0,0,0,0,0,0,0,0,0]]; 
-	$scope.solCopy = angular.copy($scope.solution);
+						 [0,0,0,0,0,0,0,0,0]]; */
 
+	$scope.falseMat =  [[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false],
+						[false, false, false, false, false, false, false, false, false]];
+	$scope.filledIn = $scope.falseMat;
+
+	$scope.solCopy = angular.copy($scope.solution);
+	$scope.displayGrid = $scope.sudokuGrid;
+
+	/*
+		Goes through the routine whenever the Solve button is clicked on the UI.
+		The current inputted grid is pulled from $scope.sudokuGrid after being validated, 
+		then passed through the backtracking algorithm.
+	*/
 	$scope.solve = function() {
+		if (!validateGrid($scope.sudokuGrid)) {
+			alert("This sudoku puzzle is invalid.");
+			return;
+		}
 		var partial = angular.copy($scope.sudokuGrid);
 		$scope.solCopy = angular.copy($scope.solution);
 		$scope.solution = angular.copy($scope.sudokuGrid);
@@ -54,8 +77,13 @@ function SudokuController($scope) {
 		} */
 		var mutable = angular.copy($scope.filledIn);
 		uniqueSweep(partial, mutable);
-		backtrack(partial, 0, -1, mutable);
-		if (!$scope.solved) {
+		var status = backtrack(partial, 0, -1, mutable);
+		if (status == -1) {
+			alert("This sudoku puzzle has no unique solution.");
+			$scope.displayGrid = $scope.sudokuGrid;
+			$scope.filledIn = $scope.falseMat;
+		}
+		else if (!$scope.solved) {
 			alert("This sudoku puzzle has no solutions.");
 			$scope.solution = angular.copy($scope.solCopy);
 		}
@@ -63,6 +91,45 @@ function SudokuController($scope) {
 		console.log($scope.numIters);
 	}
 
+	/*
+		Loops through every possible row/column/square in the grid 
+		and individually validates each one. 
+	*/
+	function validateGrid(grid) {
+		for (var i = 0; i < 9; i++) {
+			var row = new Array(9);
+			var square = new Array(9);
+			var column = angular.copy(grid[i]);
+
+			for (var j = 0; j < 9; j++) {
+				row[j] = grid[j][i];
+				square[j] = grid[Math.floor(i / 3) * 3 + Math.floor(j / 3)][i * 3 % 9 + j % 3];
+			}
+
+			if (!(validateSection(row) && validateSection(column) && validateSection(square))) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/*
+		Validates a section of the board (row, column, square). Loops through
+		and ensures there are no duplicates. 
+	*/
+	function validateSection(input) {
+		input = input.sort();
+		for (var i = 0; i < input.length - 1; i++) {
+			if ((input[i] == input[i + 1]) && (input[i] != 0)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/*
+		Resets the given matrix to all 0's. 
+	*/
 	function resetSolution(matrix) {
 		for (var i = 0; i < matrix.length; i++) {
 			for (var j = 0; j < matrix[i].length; j++) {
@@ -71,14 +138,25 @@ function SudokuController($scope) {
 		}
 	}
 
-	$scope.resetInput = function() {
+	/*
+		Resets the input and solution grids, then sets the display to
+		show the input grid.
+	*/
+	$scope.reset = function() {
 		for (var i = 0; i < 9; i++) {
 			for (var j = 0; j < 9; j++) {
 				$scope.sudokuGrid[i][j] = 0;
+				$scope.solution[i][j] = 0;
 			}
 		}
+		$scope.displayGrid = $scope.sudokuGrid;
+		$scope.filledIn = $scope.falseMat;
 	}
 
+	/*
+		Sweeps through the board and fills in all the cells for which
+		there is only one possible entry.
+	*/
 	function uniqueSweep(partial, mutable) {
 		$scope.numIters++;
 		var finishedSweep = true;
@@ -102,6 +180,10 @@ function SudokuController($scope) {
 		uniqueSweep(partial, mutable);
 	}
 
+	/*
+		Takes a 9x9 grid of numbers (grid) and returns a 9x9 boolean grid (m)
+		where m[i][j] = (grid[i][j] == 0)		 
+	*/
 	$scope.getMutableLocs = function(grid) {
 		//console.log(grid);
 		var m= [[true, true, true, true, true, true, true, true, true],
@@ -124,12 +206,25 @@ function SudokuController($scope) {
 		return m;
 	}
 
+	/*
+		General backtracking algorithm. Takes in the partial solution,
+		current row/column, and a matrix of locations that it can/can't
+		modify.
+
+		Finds all possible values for the next cell (given current position)
+		and tries each one.
+	*/
 	function backtrack(partial, r, c, mutableLocs) {
 		//console.log("1");
 		$scope.numIters++;
 		var nextLoc = nextPoint(r, c, mutableLocs);
 		if (nextLoc.length == 0) {
 			processSolution(angular.copy(partial));
+			if ($scope.numSolutionsFound > 1) {
+				$scope.numSolutionsFound = 0;
+				resetSolution($scope.solution);
+				return -1;
+			}
 		}
 		else {
 			r = nextLoc[0];
@@ -137,12 +232,20 @@ function SudokuController($scope) {
 			var candidates = constructCandidates(partial, r, c, mutableLocs);
 			for (var i = 0; i < candidates.length; i++) {
 				partial[r][c] = candidates[i];
-				backtrack(partial, r, c, mutableLocs);
+				var status = backtrack(partial, r, c, mutableLocs);
+				if (status == -1) {
+					return -1;
+				}
 			}
 			partial[r][c] = 0;
 		}
 	}
 
+	/*
+		For a celll given by row/column, returns an array of all possible
+		values that the cell can take. Existing values in the same
+		row/column/square limit what values are valid in that cell.
+	*/
 	function constructCandidates(partial, r, c, mutableLocs) {
 		if (!mutableLocs[r][c]) {
 			return [partial[r][c]];
@@ -195,11 +298,10 @@ function SudokuController($scope) {
 	    return cand;
 	}
 
-	$scope.test = function() {
-		var row = $scope.sudokuGrid[0];
-		row[0] = 5;
-	}
-
+	/*
+		Gets all the numbers within the specified row/col range
+		except for the number at the specified row/col.
+	*/
 	function getNumsInArea(partial, rowRange, colRange, row, col) {
 		//console.log("3");
 		var inArea = [];
@@ -213,16 +315,28 @@ function SudokuController($scope) {
 		return inArea;
 	}
 
+	/*
+		Sets the display grid to a copy of the solution and 
+		updates the number of computed solutions.
+	*/
 	function processSolution(solution) {
 		//console.log("4");
 		//console.log(solution);
 		var copy = angular.copy(solution);
 		if ($scope.isSolution(copy)) {
+			$scope.displayGrid = copy;
 			$scope.solution = copy;
 			$scope.solved = true;
+			$scope.numSolutionsFound++;
 		}
 	}
 
+	/*
+		Checks to see if a solution is really a solution 
+		by looking for any 0's (each non-zero entry is assumed to be 
+		inherently valid due to constructCandidates and the pre-solution
+		validation)
+	*/
 	$scope.isSolution = function(solution) {
 		//console.log("5");
 		//console.log(solution);
@@ -236,6 +350,11 @@ function SudokuController($scope) {
 		return true;
 	}
 
+	/*
+		Given the current row/col positioning and the matrix of locations
+		that can be changed, returns the next row/col that can be tested.
+		Moves row by row, 1 column at a time.
+	*/
 	function nextPoint(r, c, mutableLocs) {
 		//console.log("6");
 		//console.log("(" + r + ", " + c + ")");
@@ -252,8 +371,9 @@ function SudokuController($scope) {
 		}
 		return nextPoint(r, c, mutableLocs);
 	}
-
 }
+
+
 
 angular.module('sudokuCtrl').directive('sudokuCell', function() {
 	return {
@@ -261,35 +381,19 @@ angular.module('sudokuCtrl').directive('sudokuCell', function() {
 		replace: true,
 		templateUrl: 'sudokuCell.html',
 		scope: {
-			row: '=',
-			rowNum: '=',
-			col: '='
+			row: '=', 
+			col: '=',
+			initialNum: '='
 		},
 		controller: SudokuCellController
 	}
 });
 
 function SudokuCellController($scope) {
-	$scope.disabled = $scope.$parent.$parent.solution;
-	$scope.cross = $scope.$parent.cross;
-	$scope.blackText = true;
-	$scope.$parent.$parent.$parent.$watch('solution', function() {
-		var orig = $scope.$parent.$parent.orig;
-		var solGrid = $scope.$parent.$parent.$parent.solution;
-		$scope.blackText = !$scope.disabled || orig[$scope.rowNum][$scope.col] == solGrid[$scope.rowNum][$scope.col];
-	});
+	//$scope.rowIndex = parseInt($scope.rowIndex);
 	$scope.displayNum = "" + $scope.row[$scope.col];
-	if ($scope.displayNum == 0) {
-		$scope.displayNum = null;
-	}
-	$scope.onClick = function() {
-		var num = $scope.row[$scope.col];
-		num++;
-		if (num > 9) {
-			num = 0;
-		}
-		$scope.row[$scope.col] = num;
-	}
+	//console.log($scope);
+	//$scope.initialNum = $scope.$parent.colors[$scope.rowIndex][$scope.col];
 	$scope.$watch('row[col]', function(newV, oldV) {
 		if (newV == 0) {
 			$scope.displayNum = null;
@@ -298,53 +402,30 @@ function SudokuCellController($scope) {
 			$scope.displayNum = "" + newV;
 		}
 	});
+	$scope.updateTile = function() {
+		var num = $scope.row[$scope.col];
+		num++;
+		if (num > 9) {
+			num = 0;
+		}
+		$scope.row[$scope.col] = num;
+	}
 }
 
-angular.module('sudokuCtrl').directive('sudokuBox', function() {
+
+angular.module('sudokuCtrl').directive('sudokuBoard', function() {
 	return {
 		restrict: 'E',
 		replace: true,
-		templateUrl: 'sudokuBox.html',
+		templateUrl: 'sudokuBoard.html',
 		scope: {
 			grid: '=',
-			preFilled: '=',
-			midRow: '@',
-			midCol: '@',
+			colors: '='
 		},
-		controller: SudokuBoxController
+		controller: SudokuBoardController
 	}
 });
 
-function SudokuBoxController($scope) {
-	$scope.midRow = parseInt($scope.midRow);
-	$scope.midCol = parseInt($scope.midCol);
-	$scope.rowRange = [$scope.midRow - 1, $scope.midRow + 1];
-	$scope.colRange = [$scope.midCol - 1, $scope.midCol + 1];
-	$scope.cross = $scope.midRow == $scope.midCol || $scope.midRow + $scope.midCol == 8;
-}
+function SudokuBoardController($scope) {
 
-angular.module('sudokuCtrl').directive('sudokuGrid', function() {
-	return {
-		restrict: 'E',
-		replace: true,
-		templateUrl: 'sudokuGrid.html',
-		scope: {
-			orig: '=',
-			solGrid: '=',
-			solution: '='
-		},
-		controller: SudokuGridController
-	}
-});
-
-function SudokuGridController($scope) {
-	$scope.grid = $scope.orig;
-	if ($scope.solution) {
-		$scope.grid = $scope.solGrid;
-	}
-	$scope.$parent.$watch('solution', function() {
-		if ($scope.solution) {
-			$scope.grid = $scope.$parent.solution;
-		}
-	});
 }

@@ -1,1 +1,1 @@
-<button style="width: 40px; height: 40px" ng-click="onClick()" ng-class="{initialSol: blackText, filledSol: !blackText, crossPos: cross, circPos: !cross}" ng-disabled="disabled">{{displayNum}}</button>
+<button class="sudokuCell" ng-click="updateTile()" ng-class="(!initialNum) ? 'initialSol' : 'filledSol' ">{{displayNum}}</button>
